@@ -264,7 +264,7 @@ locals {
   
   use_network_manager  = var.environment == "server" ? "no" : "yes"
   
-  qcow2_filename = trimspace(basename("${var.iso_url}.qcow2"))
+  qcow2_filename = "opensuse-leap-15.6-${var.environment}.qcow2"
 
   is_windows = length(var.windir) > 0
   
@@ -435,7 +435,7 @@ source "qemu" "vm-qemu" {
 		})
 	}
   
-  firmware   = local.qemu_firmware == "bios" ? null : "../OVMF/OVMF_CODE.fd"
+  firmware   = local.qemu_firmware == "bios" ? null : "./OVMF/OVMF_CODE.fd"
   
   vm_name = local.qcow2_filename
 
@@ -465,7 +465,7 @@ source "qemu" "vm-qemu" {
   ssh_password     = local.ssh_password
   ssh_timeout      = "30m"
   
-  output_directory = "${var.output_directory}/qemu/${local.vm_name}"
+  output_directory = "${var.output_directory}/qemu"
 }
 
 source "proxmox-iso" "vm-proxmox" {

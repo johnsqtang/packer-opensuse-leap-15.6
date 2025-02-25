@@ -1,0 +1,6 @@
+OVMF_CODE.fd must be placed in this directory in order to build QEMU EFI image.
+
+One way to get OVMF_CODE.fd is to install the ovmf package on Debian 12 and then OVMF_CODE.fd will be in /usr/share/OVMF/:
+ sudo apt install ovmf
+ ls /usr/share/OVMF/
+
