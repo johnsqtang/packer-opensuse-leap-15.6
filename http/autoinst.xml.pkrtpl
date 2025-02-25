@@ -1,0 +1,650 @@
+<?xml version="1.0"?>
+<!DOCTYPE profile>
+<profile xmlns="http://www.suse.com/1.0/yast2ns" xmlns:config="http://www.suse.com/1.0/configns">
+%{ if "${use_network_manager}" == "yes" ~}
+   <!-- use NetworkManager -->
+%{ else ~}
+   <!-- use wicked -->
+%{ endif ~}
+  <bootloader t="map">
+    <global t="map">
+      <append>splash=silent preempt=full mitigations=auto quiet security=apparmor</append>
+      <cpu_mitigations>auto</cpu_mitigations>
+      <gfxmode>auto</gfxmode>
+      <hiddenmenu>false</hiddenmenu>
+      <os_prober>true</os_prober>
+      <secure_boot>true</secure_boot>
+      <terminal>gfxterm</terminal>
+      <timeout t="integer">8</timeout>
+      <update_nvram>true</update_nvram>
+      <xen_kernel_append>vga=gfx-1024x768x16</xen_kernel_append>
+    </global>
+%{ if "${bootmode}" == "efi" ~}	
+    <loader_type>grub2-efi</loader_type>
+%{ else ~}
+    <loader_type>grub2</loader_type>
+%{ endif ~}
+  </bootloader>
+  <firewall t="map">
+    <default_zone>public</default_zone>
+    <enable_firewall t="boolean">true</enable_firewall>
+    <log_denied_packets>off</log_denied_packets>
+    <start_firewall t="boolean">true</start_firewall>
+    <zones t="list">
+      <zone t="map">
+        <description>Unsolicited incoming network packets are rejected. Incoming packets that are related to outgoing network connections are accepted. Outgoing network connections are allowed.</description>
+        <interfaces t="list"/>
+        <masquerade t="boolean">false</masquerade>
+        <name>block</name>
+        <ports t="list"/>
+        <protocols t="list"/>
+        <services t="list"/>
+        <short>Block</short>
+        <target>%%REJECT%%</target>
+      </zone>
+      <zone t="map">
+        <description>For computers in your demilitarized zone that are publicly-accessible with limited access to your internal network. Only selected incoming connections are accepted.</description>
+        <interfaces t="list"/>
+        <masquerade t="boolean">false</masquerade>
+        <name>dmz</name>
+        <ports t="list"/>
+        <protocols t="list"/>
+        <services t="list">
+          <service>ssh</service>
+        </services>
+        <short>DMZ</short>
+        <target>default</target>
+      </zone>
+      <zone t="map">
+        <description>All network connections are accepted.</description>
+        <interfaces t="list">
+          <interface>docker0</interface>
+        </interfaces>
+        <masquerade t="boolean">false</masquerade>
+        <name>docker</name>
+        <ports t="list"/>
+        <protocols t="list"/>
+        <services t="list"/>
+        <short>docker</short>
+        <target>ACCEPT</target>
+      </zone>
+      <zone t="map">
+        <description>Unsolicited incoming network packets are dropped. Incoming packets that are related to outgoing network connections are accepted. Outgoing network connections are allowed.</description>
+        <interfaces t="list"/>
+        <masquerade t="boolean">false</masquerade>
+        <name>drop</name>
+        <ports t="list"/>
+        <protocols t="list"/>
+        <services t="list"/>
+        <short>Drop</short>
+        <target>DROP</target>
+      </zone>
+      <zone t="map">
+        <description>For use on external networks. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.</description>
+        <interfaces t="list"/>
+        <masquerade t="boolean">true</masquerade>
+        <name>external</name>
+        <ports t="list"/>
+        <protocols t="list"/>
+        <services t="list">
+          <service>ssh</service>
+        </services>
+        <short>External</short>
+        <target>default</target>
+      </zone>
+      <zone t="map">
+        <description>For use in home areas. You mostly trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.</description>
+        <interfaces t="list"/>
+        <masquerade t="boolean">false</masquerade>
+        <name>home</name>
+        <ports t="list"/>
+        <protocols t="list"/>
+        <services t="list">
+          <service>dhcpv6-client</service>
+          <service>mdns</service>
+          <service>samba-client</service>
+          <service>ssh</service>
+        </services>
+        <short>Home</short>
+        <target>default</target>
+      </zone>
+      <zone t="map">
+        <description>For use on internal networks. You mostly trust the other computers on the networks to not harm your computer. Only selected incoming connections are accepted.</description>
+        <interfaces t="list"/>
+        <masquerade t="boolean">false</masquerade>
+        <name>internal</name>
+        <ports t="list"/>
+        <protocols t="list"/>
+        <services t="list">
+          <service>dhcpv6-client</service>
+          <service>mdns</service>
+          <service>samba-client</service>
+          <service>ssh</service>
+        </services>
+        <short>Internal</short>
+        <target>default</target>
+      </zone>
+%{ if "${use_network_manager}" == "yes" ~}
+      <zone t="map">
+        <description><![CDATA[     This zone is used internally by NetworkManager when activating a     profile that uses connection sharing and doesn't have an explicit     firewall zone set.     Block all traffic to the local machine except ICMP, ICMPv6, DHCP     and DNS. Allow all forwarded traffic.     Note that future package updates may change the definition of the     zone unless you overwrite it with your own definition.   ]]></description>
+        <interfaces t="list"/>
+        <masquerade t="boolean">false</masquerade>
+        <name>nm-shared</name>
+        <ports t="list"/>
+        <protocols t="list">
+          <listentry>icmp</listentry>
+          <listentry>ipv6-icmp</listentry>
+        </protocols>
+        <services t="list">
+          <service>dhcp</service>
+          <service>dns</service>
+          <service>ssh</service>
+        </services>
+        <short>NetworkManager Shared</short>
+        <target>ACCEPT</target>
+      </zone>
+%{ endif ~}
+      <zone t="map">
+        <description>For use in public areas. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.</description>
+%{ if "${use_network_manager}" == "yes" ~}
+        <interfaces t="list"/>
+%{ else ~}
+        <interfaces t="list">
+          <interface>eth0</interface>
+        </interfaces>
+%{ endif ~}
+        <masquerade t="boolean">false</masquerade>
+        <name>public</name>
+        <ports t="list"/>
+        <protocols t="list"/>
+        <services t="list">
+          <service>dhcpv6-client</service>
+          <service>ssh</service>
+        </services>
+        <short>Public</short>
+        <target>default</target>
+      </zone>
+      <zone t="map">
+        <description>All network connections are accepted.</description>
+        <interfaces t="list"/>
+        <masquerade t="boolean">false</masquerade>
+        <name>trusted</name>
+        <ports t="list"/>
+        <protocols t="list"/>
+        <services t="list"/>
+        <short>Trusted</short>
+        <target>ACCEPT</target>
+      </zone>
+      <zone t="map">
+        <description>For use in work areas. You mostly trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.</description>
+        <interfaces t="list"/>
+        <masquerade t="boolean">false</masquerade>
+        <name>work</name>
+        <ports t="list"/>
+        <protocols t="list"/>
+        <services t="list">
+          <service>dhcpv6-client</service>
+          <service>ssh</service>
+        </services>
+        <short>Work</short>
+        <target>default</target>
+      </zone>
+    </zones>
+  </firewall>
+  <general t="map">
+    <mode t="map">
+      <confirm t="boolean">false</confirm>
+    </mode>
+  </general>
+%{ if "${use_network_manager}" == "yes" ~}
+  <networking t="map">
+    <dns t="map">
+      <dhcp_hostname t="boolean">false</dhcp_hostname>
+      <hostname>${hostname}.localdomain</hostname>
+      <resolv_conf_policy>auto</resolv_conf_policy>
+    </dns>
+    <ipv6 t="boolean">true</ipv6>
+    <keep_install_network t="boolean">true</keep_install_network>
+    <managed t="boolean">true</managed>
+  </networking>
+%{ else ~}
+  <networking t="map">
+    <dhcp_options t="map">
+      <dhclient_client_id/>
+      <dhclient_hostname_option>AUTO</dhclient_hostname_option>
+    </dhcp_options>
+    <dns t="map">
+      <dhcp_hostname t="boolean">true</dhcp_hostname>
+      <hostname>localhost</hostname>
+      <resolv_conf_policy>auto</resolv_conf_policy>
+    </dns>
+    <interfaces t="list">
+      <interface t="map">
+        <bootproto>dhcp</bootproto>
+        <name>eth0</name>
+        <startmode>auto</startmode>
+        <zone>public</zone>
+      </interface>
+    </interfaces>
+    <ipv6 t="boolean">true</ipv6>
+    <keep_install_network t="boolean">true</keep_install_network>
+    <managed t="boolean">false</managed>
+    <routing t="map">
+      <ipv4_forward t="boolean">false</ipv4_forward>
+      <ipv6_forward t="boolean">false</ipv6_forward>
+    </routing>
+  </networking>
+%{ endif ~}
+  <ntp-client t="map">
+    <ntp_policy>auto</ntp_policy>
+    <ntp_servers t="list"/>
+    <ntp_sync>systemd</ntp_sync>
+  </ntp-client>  
+  <partitioning t="list">
+    <drive t="map">
+      <device>/dev/sda</device>
+      <disklabel>gpt</disklabel>
+      <enable_snapshots t="boolean">true</enable_snapshots>
+      <partitions t="list">
+%{ if "${bootmode}" == "efi" ~}	
+        <partition t="map">
+          <create t="boolean">true</create>
+          <filesystem t="symbol">vfat</filesystem>
+          <format t="boolean">true</format>
+          <fstopt>utf8</fstopt>
+          <mount>/boot/efi</mount>
+          <mountby t="symbol">uuid</mountby>
+          <partition_id t="integer">259</partition_id>
+          <partition_nr t="integer">1</partition_nr>
+          <resize t="boolean">false</resize>
+          <size>536870912</size>
+        </partition>
+%{ else ~}
+        <partition t="map">
+          <create t="boolean">true</create>
+          <format t="boolean">false</format>
+          <partition_id t="integer">263</partition_id>
+          <partition_nr t="integer">1</partition_nr>
+          <resize t="boolean">false</resize>
+          <size>8388608</size>
+        </partition>
+%{ endif ~}
+        <partition t="map">
+          <create t="boolean">true</create>
+          <create_subvolumes t="boolean">true</create_subvolumes>
+          <filesystem t="symbol">btrfs</filesystem>
+          <format t="boolean">true</format>
+          <mount>/</mount>
+          <mountby t="symbol">uuid</mountby>
+          <partition_id t="integer">131</partition_id>
+          <partition_nr t="integer">2</partition_nr>
+          <quotas t="boolean">true</quotas>
+          <resize t="boolean">false</resize>
+          <size>max</size>
+          <subvolumes t="list">
+            <subvolume t="map">
+              <copy_on_write t="boolean">false</copy_on_write>
+              <path>var</path>
+            </subvolume>
+            <subvolume t="map">
+              <copy_on_write t="boolean">true</copy_on_write>
+              <path>usr/local</path>
+            </subvolume>
+            <subvolume t="map">
+              <copy_on_write t="boolean">true</copy_on_write>
+              <path>tmp</path>
+            </subvolume>
+            <subvolume t="map">
+              <copy_on_write t="boolean">true</copy_on_write>
+              <path>srv</path>
+            </subvolume>
+            <subvolume t="map">
+              <copy_on_write t="boolean">true</copy_on_write>
+              <path>root</path>
+            </subvolume>
+            <subvolume t="map">
+              <copy_on_write t="boolean">true</copy_on_write>
+              <path>opt</path>
+            </subvolume>
+            <subvolume t="map">
+              <copy_on_write t="boolean">true</copy_on_write>
+              <path>home</path>
+            </subvolume>
+            <subvolume t="map">
+              <copy_on_write t="boolean">true</copy_on_write>
+              <path>boot/grub2/x86_64-efi</path>
+            </subvolume>
+            <subvolume t="map">
+              <copy_on_write t="boolean">true</copy_on_write>
+              <path>boot/grub2/i386-pc</path>
+            </subvolume>
+          </subvolumes>
+          <subvolumes_prefix>@</subvolumes_prefix>
+        </partition>
+        <partition t="map">
+          <create t="boolean">true</create>
+          <filesystem t="symbol">swap</filesystem>
+          <format t="boolean">true</format>
+          <mount>swap</mount>
+          <mountby t="symbol">uuid</mountby>
+          <partition_id t="integer">130</partition_id>
+          <partition_nr t="integer">3</partition_nr>
+          <resize t="boolean">false</resize>
+          <size>2148515328</size>
+        </partition>
+      </partitions>
+      <type t="symbol">CT_DISK</type>
+      <use>all</use>
+    </drive>
+  </partitioning>
+  <services-manager t="map">
+    <default_target>multi-user</default_target>
+    <services t="map">
+      <enable t="list">
+%{ if "${use_network_manager}" == "yes" ~}
+        <service>ModemManager</service>
+        <service>NetworkManager</service>
+        <service>NetworkManager-dispatcher</service>
+        <service>NetworkManager-wait-online</service>
+%{ endif ~}
+        <service>YaST2-Firstboot</service>
+        <service>YaST2-Second-Stage</service>
+        <service>apparmor</service>
+%{ if "${environment}" == "gnome" ~}
+		<service>appstream-sync-cache</service>
+%{ endif ~}
+%{ if "${environment}" == "kde" ~}
+		<service>appstream-sync-cache</service>
+%{ endif ~}
+        <service>auditd</service>
+%{ if "${environment}" == "gnome" ~}
+        <service>avahi-daemon</service>
+        <service>bluetooth</service>
+%{ endif ~}
+%{ if "${environment}" == "kde" ~}
+        <service>avahi-daemon</service>
+        <service>bluetooth</service>
+%{ endif ~}
+%{ if "${environment}" == "xfce" ~}
+        <service>avahi-daemon</service>
+        <service>bluetooth</service>
+%{ endif ~}
+        <service>klog</service>
+        <service>chronyd</service>
+        <service>cron</service>
+        <service>cups</service>
+        <service>firewalld</service>
+%{ if "${use_network_manager}" != "yes" ~}
+        <service>wickedd-auto4</service>
+        <service>wickedd-dhcp4</service>
+        <service>wickedd-dhcp6</service>
+        <service>wickedd-nanny</service>		
+%{ endif ~}
+%{ if "${environment}" == "gnome" ~}
+        <service>display-manager</service>
+%{ endif ~}
+%{ if "${environment}" == "kde" ~}
+        <service>display-manager</service>
+%{ endif ~}
+%{ if "${environment}" == "xfce" ~}
+        <service>display-manager</service>
+%{ endif ~}
+        <service>irqbalance</service>
+        <service>issue-generator</service>
+        <service>kbdsettings</service>
+%{ if "${environment}" == "gnome" ~}
+		<service>lvm2-monitor</service>
+%{ endif ~}
+%{ if "${environment}" == "kde" ~}
+		<service>lvm2-monitor</service>
+%{ endif ~}
+%{ if "${provider}" == "virtualbox" ~}
+		<service>lvm2-monitor</service>
+%{ endif ~}
+        <service>mcelog</service>
+%{ if "${use_network_manager}" != "yes" ~}
+<service>wicked</service>		
+%{ endif ~}
+        <service>nscd</service>
+        <service>postfix</service>
+        <service>purge-kernels</service>
+        <service>rsyslog</service>
+        <service>smartd</service>
+        <service>sshd</service>
+        <service>systemd-pstore</service>
+        <service>systemd-remount-fs</service>
+%{ if "${provider}" == "vmware" ~}
+        <service>vgauthd</service>
+        <service>vmtoolsd</service>
+%{ endif ~}
+%{ if "${provider}" == "virtualbox" ~}
+        <service>vgauthd</service>
+        <service>vmtoolsd</service>
+%{ endif ~}
+      </enable>
+%{ if "${environment}" == "gnome" ~}
+      <on_demand t="list">
+        <listentry>pcscd</listentry>
+      </on_demand>
+%{ endif ~}
+%{ if "${environment}" == "kde" ~}
+      <on_demand t="list">
+        <listentry>pcscd</listentry>
+      </on_demand>
+%{ endif ~}
+%{ if "${environment}" == "xfce" ~}
+      <on_demand t="list">
+        <listentry>pcscd</listentry>
+      </on_demand>
+%{ endif ~}
+    </services>
+  </services-manager>
+  <software t="map">
+    <install_recommended t="boolean">true</install_recommended>
+    <instsource/>
+    <packages t="list">
+%{ if "${use_network_manager}" != "yes" ~}
+      <package>wicked</package>
+%{ endif ~}
+%{ if "${provider}" != "virtualbox" ~}
+      <package>snapper</package>
+%{ endif ~}
+      <package>shim</package>
+      <package>os-prober</package>
+      <package>openssh</package>
+      <package>openSUSE-release</package>
+%{ if "${provider}" != "virtualbox" ~}
+      <package>numactl</package>
+%{ if "${use_network_manager}" != "yes" ~}
+      <package>mokutil</package>
+%{ endif ~}
+%{ endif ~}
+      <package>kexec-tools</package>
+%{ if "${provider}" != "virtualbox" ~}
+      <package>irqbalance</package>
+%{ endif ~}
+      <package>grub2-x86_64-efi</package>
+      <package>glibc</package>
+      <package>firewalld</package>
+      <package>e2fsprogs</package>
+      <package>dosfstools</package>
+      <package>chrony</package>
+      <package>btrfsprogs</package>
+      <package>autoyast2</package>
+%{ if "${use_network_manager}" == "yes" ~}
+      <package>NetworkManager</package>
+%{ endif ~}
+    </packages>
+    <patterns t="list">
+      <pattern>apparmor</pattern>
+      <pattern>base</pattern>
+%{ if "${environment}" == "gnome" ~}
+      <pattern>basesystem</pattern>
+%{ endif ~}
+%{ if "${environment}" == "kde" ~}
+      <pattern>basesystem</pattern>
+%{ endif ~}
+%{ if "${environment}" == "xfce" ~}
+      <pattern>basesystem</pattern>
+%{ endif ~}
+      <pattern>documentation</pattern>
+      <pattern>enhanced_base</pattern>
+%{ if "${environment}" == "gnome" ~}
+      <pattern>fonts</pattern>
+      <pattern>fonts_opt</pattern>
+      <pattern>gnome</pattern>
+      <pattern>gnome_basic</pattern>
+      <pattern>gnome_basis</pattern>
+      <pattern>gnome_basis_opt</pattern>
+      <pattern>gnome_games</pattern>
+      <pattern>gnome_imaging</pattern>
+      <pattern>gnome_internet</pattern>
+      <pattern>gnome_multimedia</pattern>
+      <pattern>gnome_office</pattern>
+      <pattern>gnome_utilities</pattern>
+      <pattern>gnome_x11</pattern>
+      <pattern>gnome_yast</pattern>
+      <pattern>imaging</pattern>
+%{ endif ~}
+%{ if "${environment}" == "kde" ~}
+      <pattern>fonts</pattern>
+      <pattern>fonts_opt</pattern>
+      <pattern>games</pattern>
+      <pattern>kde</pattern>
+      <pattern>kde_games</pattern>
+      <pattern>kde_internet</pattern>
+      <pattern>kde_multimedia</pattern>
+      <pattern>kde_office</pattern>
+      <pattern>kde_pim</pattern>
+      <pattern>kde_plasma</pattern>
+      <pattern>kde_utilities</pattern>
+      <pattern>kde_utilities_opt</pattern>
+      <pattern>kde_yast</pattern>
+%{ endif ~}
+%{ if "${environment}" == "xfce" ~}
+      <pattern>fonts</pattern>
+      <pattern>fonts_opt</pattern>
+      <pattern>imaging</pattern>
+%{ endif ~}
+      <pattern>minimal_base</pattern>
+%{ if "${environment}" == "gnome" ~}
+      <pattern>multimedia</pattern>
+	  <pattern>office</pattern>
+%{ endif ~}
+%{ if "${environment}" == "kde" ~}
+      <pattern>multimedia</pattern>
+	  <pattern>office</pattern>
+%{ endif ~}
+%{ if "${environment}" == "xfce" ~}
+      <pattern>multimedia</pattern>
+%{ endif ~}
+      <pattern>sw_management</pattern>
+%{ if "${environment}" == "gnome" ~}
+      <pattern>sw_management_gnome</pattern>
+      <pattern>x11</pattern>
+      <pattern>x11_enhanced</pattern>
+      <pattern>x11_yast</pattern>
+%{ endif ~}
+%{ if "${environment}" == "kde" ~}
+      <pattern>x11</pattern>
+      <pattern>x11_enhanced</pattern>
+      <pattern>x11_yast</pattern>
+%{ endif ~}
+%{ if "${environment}" == "xfce" ~}
+      <pattern>x11</pattern>
+      <pattern>x11_enhanced</pattern>
+      <pattern>x11_yast</pattern>
+      <pattern>xfce</pattern>
+      <pattern>xfce_basis</pattern>
+      <pattern>xfce_office</pattern>
+%{ endif ~}
+      <pattern>yast2_basis</pattern>
+%{ if "${environment}" == "gnome" ~}
+      <pattern>yast2_desktop</pattern>
+%{ endif ~}
+%{ if "${environment}" == "kde" ~}
+      <pattern>yast2_desktop</pattern>
+%{ endif ~}
+%{ if "${environment}" == "xfce" ~}
+      <pattern>yast2_desktop</pattern>
+%{ endif ~}
+    </patterns>
+    <products t="list">
+      <product>Leap</product>
+    </products>
+  </software>
+  <ssh_import t="map">
+    <copy_config t="boolean">false</copy_config>
+    <import t="boolean">false</import>
+  </ssh_import>
+  <timezone t="map">
+    <timezone>${timezone}</timezone>
+  </timezone>
+  <user_defaults t="map">
+    <expire/>
+    <group>100</group>
+    <home>/home</home>
+    <inactive>-1</inactive>
+    <shell>/bin/bash</shell>
+    <umask>022</umask>
+  </user_defaults>
+  <users t="list">
+    <user t="map">
+      <authorized_keys t="list"/>
+      <encrypted t="boolean">false</encrypted>
+      <gid>100</gid>
+      <home>/home/${normal_username}</home>
+      <home_btrfs_subvolume t="boolean">false</home_btrfs_subvolume>
+      <password_settings t="map">
+        <expire/>
+        <flag/>
+        <inact/>
+        <max>99999</max>
+        <min>0</min>
+        <warn>7</warn>
+      </password_settings>
+      <shell>/bin/bash</shell>
+      <uid>1000</uid>
+      <user_password>${normal_user_password}</user_password>
+      <username>${normal_username}</username>
+    </user>
+    <user t="map">
+      <authorized_keys t="list"/>
+      <encrypted t="boolean">false</encrypted>
+      <fullname>root</fullname>
+      <gid>0</gid>
+      <home>/root</home>
+      <home_btrfs_subvolume t="boolean">false</home_btrfs_subvolume>
+      <password_settings t="map">
+        <expire/>
+        <flag/>
+        <inact/>
+        <max/>
+        <min/>
+        <warn/>
+      </password_settings>
+      <shell>/bin/bash</shell>
+      <uid>0</uid>
+      <user_password>${root_password}</user_password>
+      <username>root</username>
+    </user>
+  </users>
+  
+  <kdump>
+    <add_crash_kernel config:type="boolean">false</add_crash_kernel>
+  </kdump>  
+
+<scripts>
+    <post-scripts config:type="list">
+      <script>
+        <filename>post.sh</filename>
+        <interpreter>shell</interpreter>
+        <source><![CDATA[
+touch /root/finished
+]]>
+        </source>
+      </script>
+    </post-scripts>
+</scripts>
+
+</profile>

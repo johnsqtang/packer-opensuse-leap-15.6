@@ -1,0 +1,15 @@
+proxmox_node	               = "pve"
+proxmox_disk_storage_pool      = "local-lvm"
+proxmox_cloudinit_storage_pool = "local-lvm"
+proxmox_iso_images_loc_prefix  = "local:iso"
+#
+# the following must be changed the following
+#
+proxmox_host         = "<your-proxmox-ip>:8006"
+proxmox_api_token_id = "root@your-api-token-id"
+proxmox_api_token    = "your-api-token"
+
+# not specific to proxmox but used only by the proxmox provider atm
+# the IP address of the machine running packer.
+# this IP must be accessible to the proxmox server.
+http_bind_address = "w.x.y.z"
