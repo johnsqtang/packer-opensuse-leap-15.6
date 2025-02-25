@@ -1,0 +1,10 @@
+# Cache objects
+packer_cache/
+
+# build output
+output/
+
+# as it contains my proxmox credentials
+proxmox.auto.pkrvars.hcl
+
+*.iso
